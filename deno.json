@@ -1,0 +1,8 @@
+{
+  "tasks": {
+    "dev": "deno run --allow-read --allow-write --allow-run --allow-net --allow-env scripts/dev.ts",
+    "seed": "deno run --allow-net --allow-env --allow-run scripts/seed.ts",
+    "shots": "docker compose run --rm shots",
+    "test": "deno test scripts/"
+  }
+}

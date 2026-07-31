@@ -1,0 +1,24 @@
+// #sidebar - and the removal of its collapse control.
+
+// Opale exposes no flag for this: _sidebar-switch-panel.scss draws the control
+// unconditionally, and the collapsing itself is Redmine's, which toggles
+// .collapsedsidebar on #main and remembers the choice per browser. So the
+// control goes, and the collapsed state is neutralised too - otherwise anyone
+// who had already collapsed the sidebar would be left with no sidebar and no
+// way to bring it back.
+
+.theme-Catmine {
+  #main {
+    #sidebar-switch-panel {
+      display: none;
+    }
+
+    // Upstream slides the sidebar out with a negative margin on the side
+    // $sidebar-position names (_sidebar-switch-panel.scss:21-26). This theme
+    // leaves that at its default of `left`; if it is ever changed, this needs
+    // the matching side.
+    &.collapsedsidebar #sidebar {
+      margin-left: 0;
+    }
+  }
+}

@@ -1,0 +1,23 @@
+@use '../variables';
+@use 'metrics' as *;
+
+// #footer - the credit line under the page body.
+
+.theme-Catmine {
+  #footer {
+    // Upstream insets it from the window with `margin: 0 20px`
+    // (_content.scss:220), which left its top border running the full width
+    // under a centred #main. The border now spans the same column instead, and
+    // the 20px moves to padding so the text still clears that edge - the same
+    // inset #content carries, so the credit lines up with the page text above
+    // it on a page with no sidebar.
+    // Opale sets no global border-box, so without this the 20px below would be
+    // added to $content-max-width and the footer would out-run #main by 40px.
+    box-sizing: border-box;
+    max-width: $content-max-width;
+    margin-right: auto;
+    margin-left: auto;
+    padding-right: variables.$padding-side;
+    padding-left: variables.$padding-side;
+  }
+}

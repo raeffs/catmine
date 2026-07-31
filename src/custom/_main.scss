@@ -1,0 +1,19 @@
+@use 'metrics' as *;
+
+// #main - the page body, holding #sidebar and #content side by side.
+
+// Opale ships a constrained mode already, but it is a different design:
+// $fixed-layout pins #top-menu, #header, #main-menu ul, #main and #footer to a
+// fixed width and paints them as a card on a grey page (_content.scss:245-295).
+// Here the chrome stays edge to edge and only what it contains is constrained,
+// so this is a rule rather than that flag.
+
+.theme-Catmine {
+  #main {
+    // #main is a flex container, so auto margins on the container itself are
+    // what centre it; the flex children are unaffected.
+    max-width: $content-max-width;
+    margin-right: auto;
+    margin-left: auto;
+  }
+}

@@ -1,0 +1,10 @@
+FROM mcr.microsoft.com/playwright:v1.62.1-noble
+RUN npm install -g playwright@1.61.1
+ENV NODE_PATH=/usr/lib/node_modules
+# NODE_PATH (above) only satisfies CommonJS require(); capture.mjs uses ESM
+# `import`, which Node does not resolve via NODE_PATH at all. Node's ESM
+# resolver *does* walk up from the importing file through ancestor
+# node_modules directories, including the filesystem root's. /work is a bind
+# mount, so anything we put there at build time is hidden at run time — but a
+# symlink at the actual filesystem root survives, since it sits outside /work.
+RUN ln -s /usr/lib/node_modules /node_modules

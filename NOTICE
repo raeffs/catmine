@@ -1,0 +1,40 @@
+catmine — a Redmine 7 theme
+Copyright © 2026 Raphael Fleischlin
+
+This work is licensed under the GNU Affero General Public License v3.0 or later.
+See LICENSE for the full text.
+
+catmine is a set of Sass overrides layered on the Opale Redmine theme. It is a
+derivative work and carries Opale's AGPL-3.0 licence.
+
+Third-party components
+----------------------
+
+Opale Redmine theme
+  Copyright © Guillaume Agnieray. AGPL-3.0-or-later.
+  https://github.com/gagnieray/opale
+  Vendored as the git submodule at src/opale and never modified. The `build`
+  script is taken from the upstream author's custom-opale-builder and retains
+  its original copyright header.
+
+  Opale in turn vendors, under src/opale/src/sass/vendor/, the following
+  MIT-licensed components with their notices preserved upstream:
+    - Normalize.css
+    - Bootstrap mixins
+    - Tabler Icons (icon font and Sass)
+
+Fantasque Sans Mono
+  Copyright © 2013–2017 Jany Belluz. SIL Open Font License 1.1.
+  Self-hosted monospace/code webfonts under src/webfonts/. The licence text
+  ships with the fonts in the packaged theme
+  (src/webfonts/LICENSE-FantasqueSansMono.txt).
+
+Lexend
+  Copyright © 2019 The Lexend Project Authors. SIL Open Font License 1.1.
+  Self-hosted body webfont under src/webfonts/. The licence text ships with the
+  font in the packaged theme (src/webfonts/LICENSE-Lexend.txt).
+
+Catppuccin Frappé palette
+  Copyright © Catppuccin. MIT.
+  https://github.com/catppuccin/catppuccin
+  Only colour values are used; no Catppuccin code is distributed.

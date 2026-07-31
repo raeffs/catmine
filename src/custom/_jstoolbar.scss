@@ -1,0 +1,105 @@
+@use '../variables';
+
+// #jstBlock - the wiki editor: a tab strip (.jstTabs, the Edit/Preview tabs and
+// the formatting toolbar) stacked above the textarea, as two siblings inside
+// .jstBlock. At rest both carry the same surface1 border and read as one box,
+// but only the textarea reacts to :focus. With the theme's accent focus border
+// the textarea lights up while the grey tab cap above it stays put - a
+// mismatched seam, the one rough edge left by moving focus onto the border.
+
+// Propagate the focus to the strip: when the block holds a focused textarea,
+// tint the two surfaces that would otherwise stay grey to the same accent - the
+// strip's underline (the ul's bottom border) and the active tab's cap (its top
+// and side borders; the bottom stays $tab-active-bg so the tab still opens down
+// into the editor).
+
+// Triggered with :has(textarea:focus), not :focus-within, so a focused toolbar
+// button or the Preview tab does not fire it - only a genuinely focused editor.
+// The tabs precede the textarea in source order, so a sibling selector cannot
+// reach them; the shared parent is the only hook. #content buys the
+// specificity: upstream's tab rules carry an id (div.tabs:not(#main-menu), and
+// #content div.jstTabs), which a class-only selector cannot outrank.
+// $input-border-focus is the very colour the textarea border uses on focus, so
+// the strip and the field stay in step by construction.
+.theme-Catmine {
+  #content .jstBlock:has(textarea:focus) > .jstTabs.tabs {
+    > ul {
+      border-bottom-color: variables.$input-border-focus;
+    }
+
+    > ul > li > a.selected {
+      border-top-color: variables.$input-border-focus;
+      border-right-color: variables.$input-border-focus;
+      border-left-color: variables.$input-border-focus;
+    }
+  }
+}
+
+// The formatting toolbar buttons (.jstb_*) draw their glyph from a Tabler SVG,
+// which opale places as `background-image: url("/jstoolbar/*.svg")`
+// (src/opale/src/sass/components/_jstoolbar.scss:122-199). Those SVGs are
+// stroke="currentcolor", but an SVG referenced as a CSS background is rendered
+// in isolation: currentcolor there resolves to its own initial value - black -
+// with no way to see the button's `color`. So the icons paint black regardless
+// of the theme, and go all but invisible on our dark toolbar (issue #22). Opale
+// already sets the intended colour on the button - `color: $gray-800`, which
+// catmine maps to $ctp-subtext0, brightening to $gray-900/$ctp-subtext1 on
+// hover - it simply never reaches the glyph.
+
+// Re-home each icon from `background-image` to `mask-image` and paint the button
+// box in `currentcolor`: the mask clips that fill to the glyph shape, so the
+// icon finally takes the button's own (themed) colour, and opale's hover colour
+// change now actually shows. The mask geometry mirrors the computed background
+// it replaces - a 16px glyph, centred, no-repeat, in the 24px button.
+
+// The icon map is the inverse of opale's `.jstb_* { background-image }` list;
+// re-check it after an opale bump. `background-image: none` drops opale's black
+// SVG so it can't paint over the masked fill. The one class-only rule keeps its
+// specificity above opale's; the surrounding .theme-Catmine already outranks
+// opale's own `div.jstElements button` group.
+.theme-Catmine {
+  $jstb-icons: (
+    strong: bold, em: italic, ins: underline, del: strikethrough,
+    code: letter-c, h1: h1, h2: h2, h3: h3, ul: list, ol: list-numbers,
+    tl: list-check, bq: indent-increase, unbq: indent-decrease,
+    precode: code, link: wiki_link, img: image, table: table, help: help,
+  );
+
+  div.jstElements button {
+    background-color: currentcolor; // becomes the glyph colour ($ctp-subtext0)
+    background-image: none; // drop opale's black SVG - the mask replaces it
+    mask-repeat: no-repeat;
+    mask-position: center;
+    mask-size: 16px;
+
+    // Keep the glyph painted on hover so opale's `color: $gray-900`
+    // ($ctp-subtext1) shades it, instead of the grey hover fill taking over.
+    &:hover,
+    &:focus {
+      background-color: currentcolor;
+    }
+  }
+
+  @each $tool, $file in $jstb-icons {
+    div.jstElements .jstb_#{$tool} {
+      mask-image: url("/jstoolbar/#{$file}.svg");
+    }
+  }
+
+  // The "pre" button carries no icon - opale renders a text label from
+  // `.jstb_pre::before { content: "pre"; color: #333 }`. A currentcolor box fill
+  // with no mask would just be a solid square behind that text, so keep this one
+  // transparent and recolour the near-black label to the button's own colour.
+  div.jstElements .jstb_pre {
+    background-color: transparent;
+
+    &:hover,
+    &:focus {
+      background-color: transparent;
+    }
+
+    &::before {
+      color: currentcolor;
+    }
+  }
+}

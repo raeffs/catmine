@@ -1,0 +1,903 @@
+// catmine - Sass overrides applied on top of the Opale theme.
+//
+// This file is the ENTRY POINT. The ./build script (and scripts/dev.ts) copy
+// it, and the whole src/custom/ directory, into src/opale/src/sass/ and load
+// this file before anything else, so the `@use 'variables' with (...)` block
+// below configures every `!default` variable in opale/src/sass/_variables.scss.
+//
+// Everything that is not variable configuration lives in src/custom/:
+//   custom/palette      the Catppuccin Frappé colours and the single $accent
+//   custom/metrics      layout metrics shared between the partials below
+//   custom/footer       design overrides for #footer
+//   custom/header       design overrides for #header
+//   custom/main         design overrides for #main
+//   custom/main-menu    design overrides for #main-menu
+//   custom/sidebar      design overrides for #sidebar
+//   custom/top-menu     design overrides for #top-menu
+//   custom/typography   @font-face for the self-hosted webfonts
+//   custom/workarounds  rules that exist because the palette swap broke
+//                       something upstream, each with its own comment
+//
+// The split is deliberate: a design decision and a compatibility workaround
+// are different kinds of rule, and a reader has to be able to tell which is
+// which. New design work gets its own partial under src/custom/; only rules
+// answering an upstream defect go in custom/workarounds.
+//
+// ORDERING MATTERS. `@use 'variables' with (...)` may only run while nothing
+// has loaded 'variables' yet, so every partial that reads it must be @used
+// AFTER that block - see the bottom of this file. Sass allows variable
+// declarations and other @use rules before a configuring @use, but not style
+// rules; this file therefore has no rules of its own.
+//
+// HOW TO ENABLE OVERRIDES
+//   1. Uncomment the `@use 'variables' with (` line and the closing `);`.
+//   2. Uncomment at least one variable line inside (an empty `with ()` is a
+//      Sass syntax error).
+//
+// The commented lines below list EVERY overridable variable with its
+// upstream default, grouped by the section comments used upstream
+// (opale @ the submodule commit this repo pins).
+//
+// CAVEATS
+//   - The default values are shown for reference. Values that call `shade()`
+//     or reference `tabler-icons.$ti-icon-*` use functions/modules from
+//     inside opale that are NOT available in this configuration block -
+//     supply a concrete value (color, size, ...) instead. Derived defaults
+//     (e.g. $brand-accent from $brand-primary) automatically follow the
+//     variables they derive from, so you rarely need to touch them.
+//   - Sass built-in modules can be used if you load them first, e.g.:
+//       @use 'sass:color';
+//
+// Logo wiring is described in src/images/logo/README.md. For the favicon,
+// drop the file into src/favicon/ named exactly `favicon.ico` - and nothing
+// else: Redmine links the first visible file in that directory as the
+// favicon, whatever it is.
+
+@use 'sass:color';
+@use 'custom/palette' as *;
+@use 'vendor/tabler-icons' as tabler-icons;
+
+@use 'variables' with (
+
+  // Some key attributes
+  // $fixed-layout:                  false,
+  // $css-grid-layout:               false,
+  // $flexbox-layout:                true,
+  // $sidebar-position:              left,
+  // $clean-issues:                  true,
+  // $color-trackers:                true,
+  // $color-status:                  true,
+  // $color-priorities:              false,
+  // $priority-icon:                 true,
+  // $use-gravatars:                 true,
+  // $use-logo:                      false,
+  // $use-project-tiles:             true,
+  // $issue-subject-large:           true,
+  // $wiki-page-more-vertical-space: true,
+
+  // Colors
+  $blue:                          $ctp-blue,
+  $indigo:                        $ctp-lavender,
+  $purple:                        $ctp-mauve,
+  $pink:                          $ctp-pink,
+  $red:                           $ctp-red,
+  $orange:                        $ctp-peach,
+  $yellow:                        $ctp-yellow,
+  $green:                         $ctp-green,
+  $teal:                          $ctp-teal,
+
+  // Ink inversion: shade() mixes toward these two, so swapping them flips
+  // Opale's light-first ramp everywhere, including inside component files.
+  $white:                         $ctp-crust,
+  $black:                         $ctp-text,
+  $gray:                          $ctp-overlay0,
+  $gray-50:                       $ctp-crust,
+  $gray-100:                      $ctp-mantle,
+  $gray-200:                      $ctp-surface0,
+  $gray-250:                      $ctp-surface0,
+  $gray-300:                      $ctp-surface1,
+  $gray-400:                      $ctp-surface2,
+  $gray-500:                      $ctp-overlay0,
+  $gray-600:                      $ctp-overlay1,
+  $gray-700:                      $ctp-overlay2,
+  $gray-750:                      $ctp-subtext0,
+  $gray-800:                      $ctp-subtext0,
+  $gray-900:                      $ctp-subtext1,
+  $gray-950:                      $ctp-text,
+  $brand-primary:                 $accent,
+  $brand-text:                    $ctp-crust,
+  $brand-accent:                  $ctp-lavender,
+  $brand-info:                    $ctp-blue,
+  $brand-success:                 $ctp-green,
+  $brand-important:               $ctp-mauve,
+  $brand-warning:                 $ctp-peach,
+  $brand-danger:                  $ctp-red,
+  $state-info:                    color.mix($ctp-blue, $ctp-base, 20%),
+  $state-success:                 color.mix($ctp-green, $ctp-base, 20%),
+  $state-important:               color.mix($ctp-mauve, $ctp-base, 20%),
+  $state-warning:                 color.mix($ctp-peach, $ctp-base, 20%),
+  $state-danger:                  color.mix($ctp-red, $ctp-base, 20%),
+  // $shade-map: (
+  //   50:                           87.5%,
+  //   100:                          80%,
+  //   200:                          65%,
+  //   250:                          50%,
+  //   300:                          40%,
+  //   400:                          20%,
+  //   500:                          0%,
+  //   600:                          20%,
+  //   700:                          40%,
+  //   750:                          50%,
+  //   800:                          65%,
+  //   900:                          80%,
+  //   950:                          87.5%
+  // ),
+  // $gray-50:                       shade($gray, 50),
+  // $gray-100:                      shade($gray, 100),
+  // $gray-200:                      shade($gray, 200),
+  // $gray-250:                      shade($gray, 250),
+  // $gray-300:                      shade($gray, 300),
+  // $gray-400:                      shade($gray, 400),
+  // $gray-500:                      $gray,
+  // $gray-600:                      shade($gray, 600),
+  // $gray-700:                      shade($gray, 700),
+  // $gray-750:                      shade($gray, 750),
+  // $gray-800:                      shade($gray, 800),
+  // $gray-900:                      shade($gray, 900),
+  // $gray-950:                      shade($gray, 950),
+  // $brand-primary:                 #628db6,
+  // $brand-text:                    $white,
+  // $brand-accent:                  shade($brand-primary, 50),
+  // $brand-info:                    $blue,
+  // $brand-success:                 $green,
+  // $brand-important:               $purple,
+  // $brand-warning:                 $orange,
+  // $brand-danger:                  $red,
+  // $state-info:                    shade($brand-info, 100),
+  // $state-success:                 shade($brand-success, 100),
+  // $state-important:               shade($brand-important, 100),
+  // $state-warning:                 shade($brand-warning, 100),
+  // $state-danger:                  shade($brand-danger, 100),
+
+  // Scaffolding
+  $body-bg:                       $ctp-base,
+  $text-color:                    $ctp-text,
+  $link-color:                    $accent,
+  $link-hover-color:              $ctp-lavender,
+  // $link-hover-decoration:         underline,
+  // $link-closed-decoration:        line-through,
+  $link-color-issue-closed:       $ctp-overlay1,
+  $link-color-project-closed:     $ctp-overlay1,
+  $link-color-user-locked:        $ctp-overlay1,
+
+  // Typography
+  // $font-family-sans-serif:        system-ui,
+  //                                 /* macOS 10.11-10.12 */ -apple-system,
+  //                                 /* Windows 6+ */ Segoe UI,
+  //                                 /* Android 4+ */ Roboto,
+  //                                 /* Ubuntu 10.10+ */ Ubuntu,
+  //                                 /* Gnome 3+ */ Cantarell,
+  //                                 /* KDE Plasma 5+ */ Noto Sans,
+  //                                 /* fallback */ sans-serif,
+  //                                 /* macOS emoji */ "Apple Color Emoji",
+  //                                 /* Windows emoji */ "Segoe UI Emoji",
+  //                                 /* Windows emoji */ "Segoe UI Symbol",
+  //                                 /* Linux emoji */ "Noto Color Emoji",
+  // Self-hosted body font (Lexend); the @font-face is in custom/typography, and
+  // upstream's whole system stack is kept behind it as the fallback. Wrapped in
+  // parens for the same reason $font-family-monospace below is - inside a
+  // `with (...)` block a bare comma separates configuration entries.
+  $font-family-sans-serif:        ('Lexend Variable',
+                                  system-ui, -apple-system, Segoe UI, Roboto,
+                                  Ubuntu, Cantarell, Noto Sans, sans-serif,
+                                  "Apple Color Emoji", "Segoe UI Emoji",
+                                  "Segoe UI Symbol", "Noto Color Emoji"),
+  // Self-hosted; the @font-face rules are in custom/typography. Upstream's
+  // whole system stack is kept behind it as the fallback - spelled out rather
+  // than appended to $font-family-monospace, because a `with (...)` block
+  // cannot read the module it is configuring.
+  // The outer parentheses are load-bearing, and are why the commented
+  // defaults above cannot be uncommented as they stand: inside `with (...)`
+  // a bare comma separates configuration entries, so an unwrapped font stack
+  // parses as `$font-family-monospace: 'Fantasque Sans Mono'` followed by
+  // garbage. Wrapped, the whole thing is one list.
+  $font-family-monospace:         ('Fantasque Sans Mono',
+                                  /* macOS 10.10+ */ Menlo,
+                                  /* Windows 6+ */ Consolas,
+                                  /* Android 4+ */ Roboto Mono,
+                                  /* Ubuntu 10.10+ */ Ubuntu Monospace,
+                                  /* KDE Plasma 5+ */ Noto Mono,
+                                  /* KDE Plasma 4+ */ Oxygen Mono,
+                                  /* Linux/OpenOffice fallback */ Liberation Mono,
+                                  /* fallback */ monospace),
+  // $font-family-base:              $font-family-sans-serif,
+  // $font-weight-normal:            normal,
+  // $font-weight-semi-bold:         500,
+  // $font-weight-bold:              600,
+  // $font-size-base:                14px,
+  // $font-size-large:               1.285em,
+  // $font-size-large-px:            18px,
+  // $font-size-small-unitless:      .86,
+  // $font-size-small:               $font-size-small-unitless * 1em,
+  // $font-size-small-px:            math.floor($font-size-small-unitless * $font-size-base),
+  // $font-size-h1:                  2.25em,
+  // $font-size-h2:                  1.75em,
+  // $font-size-h3:                  1.5em,
+  // $font-size-h4:                  1.286em,
+  // $font-size-h5:                  1em,
+  // $font-size-h6:                  1em,
+  // $line-height-base:              1.4286, // 20/14
+  // $line-height-large:             1.33,
+  // $line-height-computed:          math.floor(($font-size-base * $line-height-base)), // ~20px
+  // $headings-font-weight:          600,
+  // $headings-line-height:          1.4,
+  // $headings-anchor-color:         $gray-400,
+  // $headings-anchor-color-active:  $gray-600,
+
+  // Wiki
+  $wiki-text:                     $ctp-text,
+  // $wiki-font-size:                16px,
+  // $wiki-line-height:              1.6,
+  // $wiki-preview-bg:               $body-bg,
+  // $wiki-copy-pre-padding:         0 3px 3px 3px,
+  $toc-bg:                        $ctp-mantle,
+  $toc-border:                    $ctp-surface1,
+  // $toc-text:                      $text-color,
+  // $toc-link:                      $link-color,
+  // $toc-link-hover:                $link-hover-color,
+  // $toc-shadow:                    0 1px 3px rgba($black, .07),
+  $toc-active-link:               $accent,
+  // $toc-active-link-hover:         shade($toc-active-link, 700),
+  $toc-active-border:             $accent,
+
+  // Components
+  // $padding-base-vertical:         6px,
+  // $padding-base-horizontal:       12px,
+  // $padding-large-vertical:        10px,
+  // $padding-large-horizontal:      16px,
+  // $padding-small-vertical:        5px,
+  // $padding-small-horizontal:      10px,
+  // $padding-side:                  20px,
+  // $padding-wiki:                  20px,
+  // $border-radius-base:            3px,
+  // $border-radius-large:           4px,
+  // $border-radius-small:           2px,
+  $hr-border:                     $ctp-surface1,
+  $abbr-border-color:             $ctp-overlay0,
+  $blockquote-border-color:       $ctp-surface2,
+  $component-color:               $ctp-text,
+  $component-bg:                  $ctp-mantle,
+  $component-border:              $ctp-surface1,
+  $component-active-color:        $ctp-crust,
+  $component-active-bg:           $accent,
+  $component-active-border:       $accent,
+  // $font-size-list:                .92em,
+  // $transition-time:               50ms,
+  // $transition-time-long:          150ms,
+  // $collapsible-max-height:        10000px,
+
+  // Tables
+  // $table-cell-padding:            8px,
+  // $table-condensed-cell-padding:  5px,
+  $table-list-header-bg:          $ctp-base,
+  // $table-list-header-border:      0 0 2px,
+  // $table-list-item-border:        0,
+  // $table-list-color-odd-rows:     true,
+  // $table-list-color-even-rows:    false,
+  // $table-list-highlight-rows:     true,
+  // $table-bg:                      transparent,
+  // $table-accent-factor:           .15,
+  // $table-hover-factor:            .4,
+  // $table-bg-accent:               rgba($gray-500, $table-accent-factor),
+  // $table-bg-hover:                rgba($gray-500, $table-hover-factor),
+  // $table-bg-active:               $table-bg-hover,
+  $table-border-color:            $ctp-surface1,
+  // $table-color-hover-factor:      - ($table-hover-factor * 2),
+  // $table-color-border-shade:      100,
+
+  // Issue statuses
+  $status-default-bg:             $accent,
+  $status-default-color:          $ctp-crust,
+  $status-default-colors-map: (
+    status-1: (
+      background:                 $ctp-blue,
+      color:                      $ctp-crust
+    ),
+    status-2: (
+      background:                 $ctp-yellow,
+      color:                      $ctp-crust
+    ),
+    status-3: (
+      background:                 $ctp-green,
+      color:                      $ctp-crust
+    ),
+    status-4: (
+      background:                 $ctp-mauve,
+      color:                      $ctp-crust
+    ),
+    closed: (
+      background:                 $ctp-red,
+      color:                      $ctp-crust
+    )
+  ),
+  // $status-custom-colors-map:      (),
+
+  // Trackers priorities
+  // $priority-icon-size:            14px,
+  // $priority-icon-space:           5px,
+  $priority-default-icons-map: (
+    lowest: (
+      icon:                       tabler-icons.$ti-icon-arrow-down,
+      color:                      $ctp-sapphire
+    ),
+    low2: (
+      icon:                       tabler-icons.$ti-icon-chevrons-down,
+      color:                      $ctp-sky
+    ),
+    low3: (
+      icon:                       tabler-icons.$ti-icon-chevron-down,
+      color:                      $ctp-teal
+    ),
+    default: (
+      icon:                       tabler-icons.$ti-icon-equal,
+      color:                      $ctp-subtext0
+    ),
+    high5: (
+      icon:                       tabler-icons.$ti-icon-chevron-up,
+      color:                      $ctp-yellow
+    ),
+    high4: (
+      icon:                       tabler-icons.$ti-icon-chevron-up,
+      color:                      $ctp-peach
+    ),
+    high3: (
+      icon:                       tabler-icons.$ti-icon-chevrons-up,
+      color:                      $ctp-maroon
+    ),
+    high2: (
+      icon:                       tabler-icons.$ti-icon-arrow-up,
+      color:                      $ctp-red
+    ),
+    highest: (
+      icon:                       tabler-icons.$ti-icon-bolt,
+      color:                      $ctp-red
+    )
+  ),
+  // $priority-custom-icons-map:     (),
+  $priority-default-color-map: (
+    lowest: (
+      border:                     $ctp-sapphire,
+      background:                 color.mix($ctp-sapphire, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-sapphire,
+    ),
+    low2: (
+      border:                     $ctp-sky,
+      background:                 color.mix($ctp-sky, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-sky,
+    ),
+    low3: (
+      border:                     $ctp-teal,
+      background:                 color.mix($ctp-teal, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-teal,
+    ),
+    default: (
+      border:                     $ctp-surface1,
+      background:                 transparent,
+      color:                      $ctp-text,
+      link:                       inherit,
+    ),
+    high5: (
+      border:                     $ctp-yellow,
+      background:                 color.mix($ctp-yellow, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-yellow,
+    ),
+    high4: (
+      border:                     $ctp-peach,
+      background:                 color.mix($ctp-peach, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-peach,
+    ),
+    high3: (
+      border:                     $ctp-maroon,
+      background:                 color.mix($ctp-maroon, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-maroon,
+    ),
+    high2: (
+      border:                     $ctp-red,
+      background:                 color.mix($ctp-red, $ctp-base, 18%),
+      color:                      $ctp-text,
+      link:                       $ctp-red,
+    ),
+    highest: (
+      border:                     $ctp-red,
+      background:                 color.mix($ctp-red, $ctp-base, 28%),
+      color:                      $ctp-text,
+      link:                       $ctp-red,
+    )
+  ),
+  // $priority-custom-color-map:     (),
+
+  // Trackers links
+  // $tracker-inline-padding:        1px 5px,
+  // $tracker-list-padding:          0 6px,
+  $tracker-default-bg:            $ctp-surface1,
+  $tracker-default-text:          $ctp-text,
+  $tracker-default-colors-map: (
+    1: (
+      background:                 $ctp-red,
+      color:                      $ctp-crust
+    ),
+    2: (
+      background:                 $ctp-blue,
+      color:                      $ctp-crust
+    ),
+    3: (
+      background:                 $ctp-green,
+      color:                      $ctp-crust
+    ),
+    4: (
+      background:                 $ctp-mauve,
+      color:                      $ctp-crust
+    ),
+    5: (
+      background:                 $ctp-peach,
+      color:                      $ctp-crust
+    ),
+    6: (
+      background:                 $ctp-teal,
+      color:                      $ctp-crust
+    ),
+    7: (
+      background:                 $ctp-lavender,
+      color:                      $ctp-crust
+    )
+  ),
+  // $tracker-custom-colors-map:     (),
+
+  // Diffs
+  $diff-out-bg:                   color.mix($ctp-red, $ctp-base, 25%),
+  $diff-out-bg-light:             color.mix($ctp-red, $ctp-base, 12%),
+  $diff-in-bg:                    color.mix($ctp-green, $ctp-base, 25%),
+  $diff-in-bg-light:              color.mix($ctp-green, $ctp-base, 12%),
+
+  // Journal changes
+  $journal-old-value-color:       $ctp-maroon,
+  $journal-old-value-bg:          color.mix($ctp-red, $ctp-base, 18%),
+  $journal-new-value-color:       $ctp-green,
+  $journal-new-value-bg:          color.mix($ctp-green, $ctp-base, 18%),
+  $journal-update-info-color:     $ctp-peach,
+
+  // Changesets
+  $changeset-added-color:         $ctp-green,
+  $changeset-modified-color:      $ctp-yellow,
+  $changeset-copied-color:        $ctp-mauve,
+  $changeset-renamed-color:       $ctp-blue,
+  $changeset-deleted-color:       $ctp-red,
+
+  // Buttons
+  // $btn-font-weight:               normal,
+  // $btn-padding-vertical:          3px,
+  // $btn-padding-horizontal:        12px,
+  // $btn-padding-horizontal-small:  8px,
+  // $btn-link-color:                $link-color,
+  $btn-link-bg:                   transparent,
+  $btn-link-border:               transparent,
+  $btn-default-color:             $ctp-text,
+  $btn-default-bg:                $ctp-surface0,
+  $btn-default-border:            $ctp-surface1,
+  $btn-default-icon-color:        $ctp-subtext0,
+  $btn-primary-color:             $ctp-crust,
+  $btn-primary-bg:                $accent,
+  $btn-primary-border:            $accent,
+  $btn-success-color:             $ctp-crust,
+  $btn-success-bg:                $ctp-green,
+  $btn-success-border:            $ctp-green,
+
+  // Action icons
+  // $icon-width:                    18px,
+  // $icon-space:                    4px,
+  // $icon-opacity:                  .7,
+  // $icon-hover-opacity:            1,
+  // $icon-color-map: (
+  //   default: (
+  //     normal:                     $brand-info,
+  //     hover:                      $brand-danger
+  //   ),
+  //   info: (
+  //     normal:                     $brand-info,
+  //     hover:                      shade($brand-info, 500)
+  //   ),
+  //   success: (
+  //     normal:                     $brand-success,
+  //     hover:                      shade($brand-success, 500)
+  //   ),
+  //   warning: (
+  //     normal:                     $brand-warning,
+  //     hover:                      shade($brand-warning, 500)
+  //   ),
+  //   danger: (
+  //     normal:                     $brand-danger,
+  //     hover:                      shade($brand-danger, 500)
+  //   )
+  // ),
+
+  // Highlights
+  $highlight-bg:                  color.mix($ctp-yellow, $ctp-base, 22%),
+  $highlight-border:              $ctp-yellow,
+  $highlight-text:                $ctp-text,
+  $highlight-link:                $ctp-yellow,
+
+  // Forms
+  $input-bg:                      $ctp-mantle,
+  $input-bg-disabled:             $ctp-surface0,
+  $input-color:                   $ctp-text,
+  $input-border:                  $ctp-surface1,
+  // $input-border-radius:           $border-radius-small,
+  // $input-border-radius-large:     $border-radius-large,
+  $input-border-focus:            $accent,
+  // 0, not the -.4 default: focus is signalled by the border alone (the outer
+  // glow is dropped in custom/_workarounds.scss), so the border wants the full
+  // accent rather than the muted 60% upstream uses behind its glow.
+  $input-border-focus-alpha:      0,
+  // $input-shadow-focus-alpha:      -.8,
+  $input-color-placeholder:       $ctp-overlay0,
+  // $input-padding-vertical:        $btn-padding-vertical,
+  // $input-padding-horizontal:      8px,
+  // $input-height-base:             ($line-height-computed + ($input-padding-vertical * 2) + 2),
+  // $label-width:                   160px,
+  // $label-wide-width:              280px,
+  // $label-space:                   10px,
+  $legend-color:                  $ctp-subtext1,
+  $legend-border-color:           $ctp-surface1,
+  // $check-input-gutter:            18px,
+  // $check-input-margin-vertical:   3px,
+  // $check-input-margin-btn-v:      7px,
+  // $check-input-margin-horizontal: 8px,
+
+  // Top
+  $top-menu-bg:                   $ctp-crust,
+  $top-menu-text:                 $ctp-subtext0,
+  $top-menu-link:                 $ctp-subtext0,
+  $top-menu-link-hover:           $ctp-text,
+  $header-bg:                     $ctp-mantle,
+  $header-text:                   $ctp-text,
+  $header-link:                   $ctp-text,
+  $header-root:                   $ctp-subtext0,
+  // Matches $padding-side, the inset #content uses, so the title lines up with
+  // the page body vertically as well as horizontally ($header-padding-
+  // horizontal is already $padding-side). Written as a literal because a
+  // `with (...)` block cannot reference the module it is configuring - keep
+  // the two in step by hand. #quick-search needs no separate adjustment:
+  // upstream derives its margin-top from this value (_top.scss:217), so it
+  // re-centres on the taller title row by itself.
+  $header-padding-vertical:       20px,
+  // $header-padding-horizontal:     $padding-side,
+  // $header-title-size:             $font-size-h3,
+  // $header-title-line-height:      $line-height-computed * 1.5,
+  // $responsive-header-height:      54px,
+  $flyout-menu-bg:                $ctp-mantle,
+  $flyout-menu-text:              $ctp-text,
+  $flyout-menu-link:              $ctp-text,
+  $flyout-menu-link-active-bg:    $ctp-surface0,
+  $flyout-menu-link-active:       $ctp-text,
+  $flyout-menu-header-bg:         $ctp-crust,
+  $flyout-menu-header-border:     $ctp-surface0,
+  $flyout-menu-header-text:       $ctp-text,
+  // Follows $header-bg: the "Search:" chip sits inside the header band and
+  // stayed one step lighter than it, so it moves up with the band.
+  $quick-search-label-bg:         $ctp-base,
+  // $quick-search-width:            200px,
+  $quick-search-border:           $ctp-surface1,
+  $quick-search-border-focus:     $accent,
+  // $quick-search-border-radius:    0 $border-radius-small $border-radius-small 0,
+  // $quick-search-box-width:        300px,
+  $quick-search-dropdown-bg:      $ctp-mantle,
+  $quick-search-dropdown-border:  $ctp-surface1,
+  // $logo-image-width:              60px,
+  // $logo-image-height:             40px,
+  // $logo-position-horizontal:      $header-padding-horizontal,
+  // $logo-position-vertical:        center,
+  // $logo-space:                    $header-padding-vertical,
+  // The tab strip is a child of #header, so it lets the header band's colour
+  // through rather than sitting on a plate of its own. Hover stays one step
+  // lighter than the bar, as it was before.
+  $main-menu-bg:                  transparent,
+  $main-menu-bg-hover:            $ctp-mantle,
+  $main-menu-bg-active:           transparent,
+  $main-menu-link:                $ctp-text,
+  // The active tab used to be told apart by weight alone - this was the same
+  // $ctp-text as an inactive one. The accent replaces that cue; see
+  // custom/_main-menu.scss for why the weight had to go.
+  $main-menu-link-active:         $accent,
+  $main-menu-border:              $ctp-surface1,
+  $main-menu-shadow-hover:        $ctp-overlay0,
+  // $main-menu-shadow-width:        3px,
+  $main-menu-shadow-active:       $accent,
+  // $main-menu-padding-vertical:    $padding-large-vertical,
+  // $main-menu-padding-horizontal:  5px,
+
+  // Pagination
+  // $pagination-padding-vertical:   $btn-padding-vertical,
+  // $pagination-padding-horizontal: 10px,
+  $pagination-color:              $ctp-text,
+  $pagination-bg:                 $ctp-surface0,
+  $pagination-border:             $ctp-surface0,
+  $pagination-hover-color:        $ctp-text,
+  $pagination-hover-bg:           $ctp-surface1,
+  $pagination-hover-border:       $ctp-surface1,
+  $pagination-active-color:       $ctp-crust,
+  $pagination-active-bg:          $accent,
+  $pagination-active-border:      $accent,
+  $pagination-inactive-color:     $ctp-overlay0,
+  $pagination-inactive-bg:        $ctp-mantle,
+  $pagination-inactive-border:    $ctp-mantle,
+
+  // Tabs
+  // $tab-padding-vertical:          5px,
+  // $tab-padding-horizontal:        8px,
+  $tab-border:                    $ctp-surface1,
+  $tab-hover-bg:                  $ctp-surface0,
+  $tab-hover-text:                $ctp-text,
+  $tab-hover-border:              $ctp-surface0,
+  $tab-active-bg:                 $ctp-base,
+  $tab-active-text:               $ctp-text,
+  $tab-active-border:             $ctp-surface1,
+
+  // Content and sidebar
+  // $sidebar-width:                 270px,
+  // $sidebar-padding-vertical:      $padding-base-vertical,
+  // $sidebar-padding-horizontal:    $padding-side,
+  // $sidebar-width-computed:        $sidebar-width - ($sidebar-padding-horizontal * 2) - 1px,
+  $sidebar-link-hover-bg:         $ctp-surface0,
+  $sidebar-link-hover-text:       $ctp-text,
+  $sidebar-link-active-bg:        $ctp-base,
+  $sidebar-link-active-border:    $ctp-surface1,
+  $sidebar-link-active-side:      $accent,
+  $sidebar-link-active-text:      $ctp-text,
+  // $sidebar-switch-top-position:   1px,
+  // $sidebar-switch-size:           18px,
+
+  // Flash messages (alerts)
+  $flash-success-bg:              color.mix($ctp-green, $ctp-base, 20%),
+  $flash-success-border:          $ctp-green,
+  $flash-success-text:            $ctp-green,
+  $flash-success-link:            $ctp-text,
+  $flash-info-bg:                 color.mix($ctp-blue, $ctp-base, 20%),
+  $flash-info-border:             $ctp-blue,
+  $flash-info-text:               $ctp-blue,
+  $flash-info-link:               $ctp-text,
+  $flash-warning-bg:              color.mix($ctp-peach, $ctp-base, 20%),
+  $flash-warning-border:          $ctp-peach,
+  $flash-warning-text:            $ctp-peach,
+  $flash-warning-link:            $ctp-text,
+  $flash-error-bg:                color.mix($ctp-red, $ctp-base, 20%),
+  $flash-error-border:            $ctp-red,
+  $flash-error-text:              $ctp-red,
+  $flash-error-link:              $ctp-text,
+
+  // Progress bars
+  // $progress-height:               12px,
+  // $progress-bg:                   rgba($gray-500, .5),
+  $progress-bar-bg:               $accent,
+  $progress-bar-success-bg:       $ctp-green,
+  $progress-bar-danger-bg:        $ctp-red,
+  $progress-bar-info-bg:          $ctp-blue,
+
+  // Panels
+  // $panel-body-padding-vertical:   15px,
+  // $panel-body-padding-horizontal: 15px,
+  // $panel-body-padding:            $panel-body-padding-vertical $panel-body-padding-horizontal,
+  $panel-color:                   $ctp-text,
+  $panel-bg:                      $ctp-mantle,
+  $panel-border:                  $ctp-surface1,
+  // $panel-border-radius:           $border-radius-base,
+  // $panel-shadow:                  0 1px 2px rgba($black, .07),
+  //                                 0 3px 8px rgba($black, .04),
+
+  // Tooltips
+  $tooltip-bg:                    $ctp-surface0,
+  $tooltip-border-width:          1px,
+  $tooltip-border:                $ctp-surface1,
+  $tooltip-text:                  $ctp-text,
+  $tooltip-link:                  $accent,
+
+  // Issue
+  $issue-bg:                      $ctp-mantle,
+  $issue-border:                  $ctp-surface1,
+  $issue-text:                    $ctp-text,
+  // $issue-padding:                 15px,
+  // $issue-gravatar-size:           50px,
+  // $issue-heading-size:            1.75,
+  // $issue-attribute-padding-v:     3px,
+  // $issue-attribute-padding-h:     5px,
+
+  // Initials avatars colors
+  $intitials-avatars-colors-map: (
+    0: (
+      background:                 $ctp-red,
+      color:                      $ctp-crust
+    ),
+    1: (
+      background:                 $ctp-peach,
+      color:                      $ctp-crust
+    ),
+    2: (
+      background:                 $ctp-yellow,
+      color:                      $ctp-crust
+    ),
+    3: (
+      background:                 $ctp-green,
+      color:                      $ctp-crust
+    ),
+    4: (
+      background:                 $ctp-teal,
+      color:                      $ctp-crust
+    ),
+    5: (
+      background:                 $ctp-blue,
+      color:                      $ctp-crust
+    ),
+    6: (
+      background:                 $ctp-mauve,
+      color:                      $ctp-crust
+    ),
+    7: (
+      background:                 $ctp-pink,
+      color:                      $ctp-crust
+    )
+  ),
+
+  // Speech "bubbles"
+  $bubble-bg:                     $ctp-mantle,
+  $bubble-border:                 $ctp-surface1,
+  $bubble-text:                   $ctp-text,
+  // $bubble-gravatar-size:          24px,
+  // $bubble-gravatar-space:         12px,
+  // $bubble-padding-vertical:       8px,
+  // $bubble-padding-horizontal:     12px,
+  $bubble-target-border:          $accent,
+  // $bubble-target-shadow-alpha:    -.8,
+
+  // Badges
+  // $badge-space:                   2px,
+  // $badge-padding-v:               0,
+  // $badge-padding-h:               5px,
+  // $badge-border-radius:           $border-radius-base,
+  // $badge-font-size:               $font-size-small,
+  // $badge-font-weight:             $font-weight-bold,
+
+  // Markdown alerts
+  // $mardown-alerts-margin:         $padding-small-horizontal,
+  // $mardown-alerts-padding:        $padding-small-horizontal,
+  // $mardown-alerts-border:         4px solid,
+  // $markdown-alerts-map: (
+  //   note: (
+  //     color:                      $brand-info
+  //   ),
+  //   tip: (
+  //     color:                      $brand-success
+  //   ),
+  //   important: (
+  //     color:                      $brand-important
+  //   ),
+  //   warning: (
+  //     color:                      $brand-warning
+  //   ),
+  //   caution: (
+  //     color:                      $brand-danger
+  //   )
+  // ),
+
+  // Media queries breakpoints
+  // $screen-xs:                     480px,
+  // $screen-xs-min:                 $screen-xs,
+  // $screen-sm:                     768px,
+  // $screen-sm-min:                 $screen-sm,
+  // $screen-md:                     992px,
+  // $screen-md-min:                 $screen-md,
+  // $screen-lg:                     1200px,
+  // $screen-lg-min:                 $screen-lg,
+  // $screen-xs-max:                 ($screen-sm-min - 1),
+  // $screen-sm-max:                 ($screen-md-min - 1),
+  // $screen-md-max:                 ($screen-lg-min - 1),
+  // $redmine-responsive-max:        899px,
+  // $redmine-responsive-min:        900px,
+
+  // Login form
+  // $login-form-width:              24em,
+  // $login-form-label-width:        8em,
+  // $login-form-box-breakpoint:     $screen-xs-min,
+  // $login-form-adjustments-map: (
+  //   -2: da en en-GB ko pl tr uk,
+  //   1: fr hr nl sr-YU sv,
+  //   2: el eu lt pt sk sr th
+  // ),
+
+  // Content widths
+  // $width-sm:                      $screen-sm - ($padding-side * 2),
+  // $width-md:                      $screen-md - ($padding-side * 2),
+  // $width-lg:                      $screen-lg - ($padding-side * 2),
+
+  // Redmine Agile plugin
+
+  // https://www.redmineup.com/pages/plugins/agile
+  // $agile-board-customize:         true,
+  // $agile-board-background:        $gray-100,
+  // $agile-issue-card-margin:       8px 10px,
+  // $agile-issue-card-padding:      7px,
+  // $agile-issue-card-border-radius: $border-radius-large,
+  // $agile-issue-card-background:   $white,
+  // $agile-issue-card-color:        $text-color,
+  // $agile-issue-card-closed-background: $gray-300,
+  // $agile-issue-card-default-color-map: (
+  //   bk-green: (
+  //     border: $green,
+  //     background: color.scale($green, $saturation: -5%, $lightness: 80%),
+  //     link: shade($green, 700),
+  //   ),
+  //   bk-blue: (
+  //     border: $blue,
+  //     background: color.scale($blue, $saturation: 50%, $lightness: 80%),
+  //     link: shade($blue, 700),
+  //   ),
+  //   bk-turquoise: (
+  //     border: $teal,
+  //     background: color.scale($teal, $saturation: -5%, $lightness: 80%),
+  //     link: shade($teal, 700),
+  //   ),
+  //   bk-lightgreen: (
+  //     border: color.adjust($green, $hue: -45deg),
+  //     background: color.scale(color.adjust($green, $hue: -45deg), $saturation: 75%, $lightness: 80%),
+  //     link: shade(color.adjust($green, $hue: -45deg), 700),
+  //   ),
+  //   bk-yellow: (
+  //     border: color.adjust($yellow, $hue: 2deg),
+  //     background: color.scale(color.adjust($yellow, $hue: 2deg), $saturation: 75%, $lightness: 80%),
+  //     link: shade($yellow, 700),
+  //   ),
+  //   bk-orange: (
+  //     border: $orange,
+  //     background: color.scale($orange, $saturation: 75%, $lightness: 80%),
+  //     link: shade($orange, 700),
+  //   ),
+  //   bk-red: (
+  //     border: $red,
+  //     background: color.scale($red, $saturation: 75%, $lightness: 85%),
+  //     link: shade($red, 700),
+  //   ),
+  //   bk-purple: (
+  //     border: $purple,
+  //     background: color.scale($purple, $saturation: 75%, $lightness: 85%),
+  //     link: shade($purple, 700),
+  //   ),
+  //   bk-gray: (
+  //     border: $gray-600,
+  //     background: $gray-300,
+  //     link: $link-color,
+  //   ),
+  // ),
+  // $agile-issue-card-custom-color-map: (),
+);
+
+// Loaded after the configuration block above, because they read the now-
+// configured `variables` module. Order within this list is irrelevant: every
+// rule in them wins on specificity, not on source order.
+@use 'custom/buttons';
+@use 'custom/footer';
+@use 'custom/gantt';
+@use 'custom/header';
+@use 'custom/jstoolbar';
+@use 'custom/main';
+@use 'custom/main-menu';
+@use 'custom/sidebar';
+@use 'custom/syntax';
+@use 'custom/top-menu';
+@use 'custom/trackers';
+@use 'custom/typography';
+@use 'custom/workarounds';
+

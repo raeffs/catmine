@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: redmine
+      POSTGRES_USER: redmine
+      POSTGRES_PASSWORD: redmine
+    volumes:
+      - db-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U redmine"]
+      interval: 5s
+      retries: 10
+
+  redmine:
+    image: redmine:7
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      REDMINE_DB_POSTGRES: db
+      REDMINE_DB_DATABASE: redmine
+      REDMINE_DB_USERNAME: redmine
+      REDMINE_DB_PASSWORD: redmine
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./dist/catmine:/usr/src/redmine/themes/catmine:ro
+      - redmine-files:/usr/src/redmine/files
+
+  # Screenshot capture. Profiled so `docker compose up -d` does not start it;
+  # `docker compose run` enables the profile automatically.
+  shots:
+    build:
+      context: .
+      dockerfile: Dockerfile.shots
+    profiles: ["tools"]
+    depends_on:
+      - redmine
+    environment:
+      REDMINE_URL: http://redmine:3000
+      SHOTS_OUT: /work/screenshots
+    working_dir: /work
+    volumes:
+      - .:/work
+    command: node scripts/shots/capture.mjs
+
+volumes:
+  db-data:
+  redmine-files:

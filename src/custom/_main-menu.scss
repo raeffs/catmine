@@ -1,0 +1,115 @@
+@use '../variables';
+
+// #main-menu - the project tab strip. It is a child of #header, not a sibling
+// (see custom/_header.scss), so it inherits that band's colour and the band
+// carries the edge beneath it.
+
+.theme-Catmine {
+  #main-menu {
+    // Upstream underlines the tab strip with an inset shadow (_top.scss:359).
+    // It lands directly on top of #header's border, and once the strip stopped
+    // being its own plate it read as a stray double line.
+    box-shadow: none;
+
+    // Upstream doubles the tabs' side padding only above $screen-lg-min
+    // (_top.scss:412-415), so the row tightened from 10px to 5px a side as
+    // soon as the window dropped under 1200px. Doubled everywhere instead: a
+    // media query adds no specificity, so this one rule outranks both states.
+    > ul > li > a {
+      padding-right: variables.$main-menu-padding-horizontal * 2;
+      padding-left: variables.$main-menu-padding-horizontal * 2;
+    }
+
+    // Upstream marks the active tab with $font-weight-semi-bold
+    // (_top.scss:430). The tab is sized by its text, so switching weight
+    // re-measures the whole row and every tab to the right of the active one
+    // shifts as you navigate. The accent underline already marks the tab;
+    // $main-menu-link-active carries the second cue instead, so nothing about
+    // the metrics changes between states.
+    > ul > li > a.selected {
+      font-weight: variables.$font-weight-normal;
+    }
+
+    // The "+" new-object tab. Upstream gives it side borders and the dropdown
+    // colour so it reads as an attached button; on a flat band it just looks
+    // like a seam. The child combinators mirror upstream's own selectors so
+    // these outrank them - including the :hover rule, which re-adds a bottom
+    // border to bridge into the dropdown.
+    > ul > li > a.new-object {
+      // Upstream shaves 1px off the bottom padding to make room for that hover
+      // border; with no border at all it would sit 1px high against its
+      // siblings.
+      padding-bottom: variables.$main-menu-padding-vertical;
+      border-width: 0;
+      background-color: transparent;
+    }
+
+    > ul > li:hover > a.new-object {
+      border-bottom-width: 0;
+    }
+
+    // Redmine's displayTabsButtons() (public/javascripts/application.js) sizes
+    // a .tabs strip with `el.find('ul').children()` - every ul inside it, which
+    // includes the "+" dropdown's ul.menu-children, since opale nests that
+    // inside #main-menu. Upstream keeps the closed dropdown at
+    // visibility: hidden, and jQuery's :visible only tests display, so its
+    // eight 150px items counted as tab width: 855px of real tabs measured as
+    // 2055px and the scroll buttons showed on every project page at any
+    // window size. Swapping the closed state to display: none makes the
+    // measurement honest. Both of upstream's reveal paths have to move with
+    // it - :hover (_top.scss:399) and the .visible class the click handler
+    // toggles (_top.scss:474).
+    .menu-children {
+      display: none;
+
+      // Colour parity with the profile-menu dropdown, the reference for this
+      // chrome. Upstream paints the panel $main-menu-dropdown-bg ($ctp-crust)
+      // and fills a hovered row with $component-active-bg (the accent); the
+      // profile menu is a $body-bg card with a quiet surface hover. Adopt both.
+      // The panel keeps its square top, its item dividers, and its flush drop
+      // beneath the flat "+" - only the palette moves, so this stays the
+      // button-attached shape rather than becoming a floating card.
+      // $main-menu-dropdown-bg is declared without !default upstream and so
+      // cannot be reconfigured through the variables block; this is why the
+      // background is restated here rather than overridden there.
+      background: variables.$body-bg;
+
+      a:hover,
+      a:focus {
+        background-color: variables.$pagination-hover-bg;
+        color: variables.$pagination-color;
+      }
+    }
+
+    // Below $screen-md-max upstream clips the strip so its scroll buttons have
+    // something to scroll (_responsive.scss:603-607), and that clip swallows
+    // the "+" dropdown: it keeps its box and its computed visibility, but
+    // stops painting and stops hit-testing, which is why the DOM looks right
+    // while nothing appears. Un-clip only while a dropdown is open - the tabs
+    // can spill for that moment, which beats a menu that cannot be used at all
+    // under 1200px.
+    &:has(.menu-children.visible),
+    &:has(> ul > li:hover > .menu-children) {
+      overflow: visible;
+    }
+
+    > ul > li:hover > .menu-children,
+    .menu-children.visible {
+      display: block;
+    }
+
+    // $main-menu-bg is transparent so the band shows through, but the scroll
+    // buttons - emitted always, sized 0 until the tabs overflow - exist to
+    // cover the tabs sliding under them. Repainting the container is enough:
+    // the buttons themselves may stay transparent, and leaving them alone
+    // avoids a specificity tie with upstream's :hover rule (_top.scss:507).
+    .tabs-buttons {
+      // .tabs .tabs-buttons (_elements.scss, the generic tab component) draws
+      // a hairline along the bottom. It was the tab strip's own edge before;
+      // now #header carries that edge and the button block only needs to sit
+      // in front of the scrolling tabs.
+      border-bottom: 0;
+      background-color: variables.$header-bg;
+    }
+  }
+}

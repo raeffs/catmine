@@ -1,0 +1,81 @@
+name: Release
+
+# Publish the packaged theme to GitHub releases (raeffs/catmine) when a
+# vX.Y.Z tag is pushed.
+on:
+  push:
+    tags: ['v*.*.*']
+
+env:
+  RELEASES_REPO: raeffs/catmine
+
+jobs:
+  release:
+    runs-on: docker
+    container:
+      image: node:24-bookworm
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: recursive
+
+      - name: Install release tooling
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends curl jq ca-certificates
+
+      # No -b flag: build the submodule commit this repo pins instead of
+      # switching to the branch tip.
+      - name: Build and package theme
+        run: ./build -n catmine -v "${GITHUB_REF_NAME}" package
+
+      - name: Compute checksum
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          ASSET="catmine-${TAG}.tar.gz"
+          test -s "dist/${ASSET}"
+          ( cd dist && sha256sum "$ASSET" > "${ASSET}.sha256" )
+          echo "ASSET=$ASSET" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASES_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          api="https://api.github.com/repos/${RELEASES_REPO}"
+          # Prerelease when the tag carries a semver pre-release suffix (v1.2.3-rc1).
+          case "$TAG" in *-*) PRERELEASE=true ;; *) PRERELEASE=false ;; esac
+
+          # 1. Create the release. Body built with jq to avoid quoting bugs.
+          req="$(jq -nc --arg t "$TAG" --argjson pre "$PRERELEASE" \
+            '{tag_name:$t, name:$t, prerelease:$pre}')"
+          code="$(curl -sS -o create.json -w '%{http_code}' -X POST "${api}/releases" \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -d "$req")"
+          echo "create release -> HTTP $code"
+          cat create.json
+          if [ "$code" != "201" ]; then
+            echo "::error::release creation failed (HTTP $code)"; exit 1
+          fi
+          release_id="$(jq -r '.id' create.json)"
+          echo "created release $release_id for $TAG"
+
+          # 2. Upload the archive and its checksum as raw-binary assets.
+          for f in "$ASSET" "${ASSET}.sha256"; do
+            echo "uploading $f"
+            code="$(curl -sS -o upload.json -w '%{http_code}' -X POST \
+              "https://uploads.github.com/repos/${RELEASES_REPO}/releases/${release_id}/assets?name=${f}" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary @"dist/${f}")"
+            echo "upload $f -> HTTP $code"
+            if [ "$code" != "201" ]; then
+              cat upload.json; echo "::error::asset upload failed ($f, HTTP $code)"; exit 1
+            fi
+          done
+          echo "release published: https://github.com/${RELEASES_REPO}/releases/tag/${TAG}"

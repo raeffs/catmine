@@ -1,0 +1,7 @@
+* text=auto
+build text eol=lf
+*.sh text eol=lf
+*.scss text eol=lf
+*.ts text eol=lf
+*.yml text eol=lf
+*.woff2 binary

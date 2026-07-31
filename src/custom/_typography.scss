@@ -1,0 +1,70 @@
+// Self-hosted webfonts.
+
+// The files live in src/webfonts/ and ./build copies them into the packaged
+// theme's webfonts/ directory, next to opale's tabler-icons (build:172). The
+// url() below is relative to the compiled stylesheets/application.css, which
+// is why it climbs one level - the same '../webfonts' path tabler's own
+// @font-face uses (vendor/_tabler-icons.scss:9).
+
+// Fantasque Sans Mono 1.8.0, the "Normal" cut - upstream also ships a NoLoopK
+// variant and a large-line-height build. SIL OFL 1.1, redistributed with its
+// licence at src/webfonts/LICENSE-FantasqueSansMono.txt.
+
+// woff2 only: every browser in opale's browserslist supports it, and the four
+// faces come to ~280KB as it is - a woff fallback would double that to serve
+// nobody. $font-family-monospace still names the old system stack behind this
+// family, so anything that cannot load them lands on Consolas/Menlo rather
+// than on a proportional fallback.
+
+// The family ships Regular and Bold only. Opale asks for $font-weight-bold
+// (600) in places; CSS font matching resolves a 600 request against 400/700
+// by preferring the heavier face, so those land on Bold rather than on a
+// synthesised smear.
+
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../webfonts/FantasqueSansMono-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: italic;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../webfonts/FantasqueSansMono-Italic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../webfonts/FantasqueSansMono-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Fantasque Sans Mono';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('../webfonts/FantasqueSansMono-BoldItalic.woff2') format('woff2');
+}
+
+// Lexend, the body font, wired to $font-family-sans-serif in _custom-variables.
+// A single variable face (weight axis 100-900, Latin subset ~40KB) covers every
+// weight Opale asks for, so a $font-weight-bold request interpolates rather than
+// synthesising. SIL OFL 1.1, licence at src/webfonts/LICENSE-Lexend.txt.
+
+// Lexend ships no italic cut; the browser obliques the upright where Redmine
+// asks for italics (wiki emphasis, a few labels). The system stack behind it in
+// $font-family-sans-serif catches anything that cannot load the face.
+@font-face {
+  font-family: 'Lexend Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('../webfonts/Lexend-Variable.woff2') format('woff2');
+}

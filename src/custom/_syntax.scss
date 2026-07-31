@@ -1,0 +1,87 @@
+@use 'sass:color';
+@use '../variables';
+@use 'palette' as *;
+
+// Code blocks and syntax highlighting.
+
+// Opale ships Rouge's GitHub *light* theme unchanged (components/_rouge.scss):
+// near-black base text (#24292e), dark-navy strings (#032f62), and light line
+// backgrounds (.hll #ffc, diff .gd #ffeef0 / .gi #f0fff4). None of it derives
+// from the palette, so the ink inversion never reached it - it only stayed
+// legible because the code block sat on a light-ish panel. Darkening that panel
+// to $ctp-mantle (below) would leave those dark tokens unreadable, so the whole
+// highlighter is re-mapped here to Catppuccin Frappe: light, saturated tokens
+// on a dark ground, following Catppuccin's syntax role guide (keywords mauve,
+// strings green, functions blue, numbers/constants peach, types yellow,
+// operators sky, comments overlay). Every rule carries the .theme-Catmine class
+// so it outranks its _rouge.scss counterpart.
+
+// The token rules are unscoped beyond .syntaxhl on purpose: they apply wherever
+// Rouge runs - wiki, issue notes, and the repository file view (whose pre sits
+// transparent on $body-bg, also dark) - so highlighting stays consistent.
+.theme-Catmine {
+  // The code block itself. $gray-500 at 30% alpha read as a bright panel; the
+  // requested $ctp-mantle sits a step below the page. Scoped to .wiki so it
+  // covers formatted text (wiki pages, issue/news descriptions) without
+  // touching the repository file view, which keeps its own transparent ground.
+  .wiki pre {
+    background-color: $ctp-mantle;
+  }
+
+  .syntaxhl {
+    color: $ctp-text;
+
+    // Highlighted / diff lines - the three light backgrounds become dark tints
+    // in the palette's own manner (cf. $diff-*, $highlight-bg).
+    .hll {
+      background-color: color.mix($ctp-yellow, $ctp-mantle, 12%);
+    }
+
+    .gd {
+      background-color: color.mix($ctp-red, $ctp-mantle, 18%);
+      color: $ctp-red;
+    }
+
+    .gi {
+      background-color: color.mix($ctp-green, $ctp-mantle, 18%);
+      color: $ctp-green;
+    }
+
+    // Comments
+    .c, .ch, .cm, .c1, .cs { color: $ctp-overlay1; }
+
+    // Keywords
+    .k, .kd, .kn, .kp, .kr { color: $ctp-mauve; }
+    .kc { color: $ctp-peach; } // constants: true / false / nil
+    .kt { color: $ctp-yellow; } // types
+
+    // Operators
+    .o, .ow { color: $ctp-sky; }
+
+    // Numbers
+    .m, .mb, .mf, .mh, .mi, .mo, .il { color: $ctp-peach; }
+
+    // Strings
+    .s, .sb, .sc, .sd, .s2, .sh, .sx, .sr, .s1, .dl { color: $ctp-green; }
+    .sa { color: $ctp-mauve; } // affix (r"", b"" ...)
+    .se, .si { color: $ctp-pink; } // escapes and interpolation
+    .ss { color: $ctp-peach; } // symbols
+
+    // Names
+    .na, .nl, .nc, .nn { color: $ctp-yellow; } // attribute, label, class, namespace
+    .nf, .fm { color: $ctp-blue; } // functions
+    .nt { color: $ctp-blue; } // markup tags
+    .nb, .bp { color: $ctp-red; } // builtins
+    .no, .ni, .ne, .vm { color: $ctp-peach; } // constants, entities, exceptions, magic vars
+    .nd { color: $ctp-mauve; } // decorators
+    .nv, .vc, .vg, .vi { color: $ctp-text; } // variables
+
+    // Whitespace markers
+    .w { color: $ctp-surface2; }
+
+    // Generic markup
+    .gh { color: $ctp-blue; } // heading
+    .gu { color: $ctp-mauve; } // subheading
+    .gt { color: $ctp-red; } // traceback
+  }
+}

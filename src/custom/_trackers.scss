@@ -1,0 +1,27 @@
+@use '../variables';
+
+// Issue and tracker "tag" links.
+
+// Under $color-trackers, Opale gives the issue/tracker links a tag shape:
+// border-radius 2px 6px 6px 2px, rounded hard on the trailing edge so the badge
+// reads like a physical luggage tag (components/_lists.scss:451-458). The
+// uneven corners look off here; make them uniform at the same
+// $border-radius-small the leading edge already uses.
+
+// The radius is declared once, on the whole family - issue-id cells in lists,
+// a.issue references, relations and parent links - and tracker badges inherit
+// it through their own .issue class (there is no .tracker radius rule; see the
+// compiled group). So the override mirrors that exact selector group rather
+// than just the tracker badge: rounding only the trackers would leave an
+// issue-id badge tag-shaped right beside a uniform one. One .theme-Catmine
+// class outranks the upstream rule.
+.theme-Catmine {
+  tr.issue .id > a,
+  tr.issue .issue_id > a,
+  tr.issue .legacy_id > a,
+  a.issue,
+  .relations > span > a.issue,
+  .parent > a.issue {
+    border-radius: variables.$border-radius-small;
+  }
+}

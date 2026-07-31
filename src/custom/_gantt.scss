@@ -1,0 +1,65 @@
+@use '../variables';
+
+// The Gantt's zoom and month-navigation controls.
+
+// Opale's "button links" rule (components/_buttons.scss:96-146) turns the direct
+// > a and > span children of a query form's .contextual into buttons; on most
+// pages those controls are direct children, so each becomes its own button.
+// The Gantt nests them a level deeper - two wrapper <span>s, one holding the
+// zoom in/out icons, the other the "« prev | next »" month links - so the rule
+// buttons the WRAPPERS instead: two inactive-looking ($pagination-inactive)
+// boxes, each cramming two controls (and, for the months, a literal " | ")
+// into one. That is the weirdness the apply/clear buttons, being direct > a
+// children of p.buttons, avoid.
+
+// Push the treatment down onto the individual controls: strip the box off the
+// wrappers and restyle their inner links exactly as opale styles a direct > a
+// (active) and > span (the disabled zoom-out), so each reads as its own button
+// like apply/clear. Scoped to .controller-gantts so no other query form's
+// .contextual is touched.
+.theme-Catmine.controller-gantts {
+  #query_form_with_buttons > .contextual > span:not(.drdn) {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+
+    // Collapses the " | " text node between the month links (and the whitespace
+    // between the two zoom icons); the real size is restored on each control.
+    font-size: 0;
+
+    > a,
+    > span {
+      display: inline-flex;
+      align-items: center;
+      margin: 0 1px;
+      padding: variables.$btn-padding-vertical variables.$btn-padding-horizontal-small;
+      border: 1px solid;
+      border-radius: variables.$border-radius-base;
+      font-size: variables.$font-size-base;
+      vertical-align: top;
+    }
+
+    > a {
+      border-color: variables.$pagination-border;
+      background-color: variables.$pagination-bg;
+      color: variables.$pagination-color;
+
+      &:hover,
+      &:focus {
+        border-color: variables.$pagination-hover-border;
+        background-color: variables.$pagination-hover-bg;
+        color: variables.$pagination-hover-color;
+        text-decoration: none;
+      }
+    }
+
+    // The zoom-out control renders as a <span> (no href) once zoom is at its
+    // limit - keep opale's disabled look for that state.
+    > span {
+      border-color: variables.$pagination-inactive-border;
+      background-color: variables.$pagination-inactive-bg;
+      color: variables.$pagination-inactive-color;
+    }
+  }
+}

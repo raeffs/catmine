@@ -1,0 +1,77 @@
+@use '../variables';
+@use '../mixins/variants';
+@use 'palette' as *;
+
+// Buttons.
+
+// button-variant (mixins/_variants.scss) bakes a drop shadow into every button
+// - a 0 1px 0 line at rest and on hover, an inset on :active - and nudges it
+// down 1px on :active (transform: translate(0, 1px)), applied to all of
+// input[type=button|submit|reset] and button at _buttons.scss:27. We want flat,
+// still buttons, so strip both the shadow and the nudge across every state. One
+// .theme-Catmine class outranks the upstream application.
+.theme-Catmine {
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  button {
+    box-shadow: none;
+
+    &:hover,
+    &:focus,
+    &:active {
+      box-shadow: none;
+    }
+
+    &:active {
+      transform: none;
+    }
+  }
+
+  // Opale singles out the input immediately after a submit as a "success"
+  // action and paints it green (button-variant($btn-success-*), _buttons.scss:
+  // 56-61), so a form with two submits shows one accent button and one green
+  // one. Drop the green: a trailing submit is a secondary action, so it reads
+  // as a neutral default button ($ctp-surface0 on $ctp-text) that steps back
+  // from the accent primary the main submit carries beside it, rather than
+  // competing with a colour of its own.
+
+  // A scoped rule, not a $btn-success override: that colour still drives
+  // genuine success affordances elsewhere (a.icon-save, .icon-checked). One
+  // .theme-Catmine class outranks upstream's form input[type="submit"] + input.
+
+  // button-variant darkens the background on hover; the theme's own convention
+  // is the opposite - a hover lifts the surface one step ($ctp-surface0 to
+  // $ctp-surface1, as pagination and sidebar links do). Restate the hover to
+  // follow that, keeping the default text.
+
+  // The border is pinned to the button's own background in every state, so this
+  // grey button reads as a flat fill with no visible edge, rather than the
+  // mixin's border (surface1, with an even darker bottom line). At rest that is
+  // $btn-default-bg; on hover and active it follows the lifted $ctp-surface1
+  // fill. The hover and active blocks are declared after the @include, so they
+  // override the mixin on source order at equal specificity.
+
+  // The mixin also re-adds the drop shadow and the :active nudge the block above
+  // removes, at a specificity that block cannot reach (the extra elements in
+  // this selector), so both are restated away here too.
+  form input[type="submit"] + input {
+    @include variants.button-variant(variables.$btn-default-color, variables.$btn-default-bg, variables.$btn-default-border);
+
+    border-color: variables.$btn-default-bg;
+    box-shadow: none;
+
+    &:hover,
+    &:focus,
+    &:active {
+      border-color: $ctp-surface1;
+      background-color: $ctp-surface1;
+      box-shadow: none;
+      color: variables.$btn-default-color;
+    }
+
+    &:active {
+      transform: none;
+    }
+  }
+}

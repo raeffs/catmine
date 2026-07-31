@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: docker
+    container:
+      image: node:24-bookworm
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          submodules: recursive
+
+      - name: Lint upstream sources
+        working-directory: src/opale
+        run: |
+          npm install --silent
+          npm run lint
+
+      # No -b flag: build the submodule commit this repo pins instead of
+      # switching to the branch tip.
+      - name: Build theme
+        run: ./build -n catmine
+
+      - name: Check output
+        run: test -s dist/catmine/stylesheets/application.css

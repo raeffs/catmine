@@ -1,0 +1,170 @@
+@use 'palette' as *;
+
+// Free-form rules.
+
+// Every rule here answers an upstream defect. Deliberate design work lives in
+// the per-component partials instead. The ink inversion ($white/$black swapped
+// to crust/text) is wrong in two upstream places: print styles, which must stay
+// a white page with black text, and the focus inset shadow, which must stay a
+// recess rather than become a light smudge. Both are re-stated here.
+.theme-Catmine {
+  // Opale paints initials avatars with a linear-gradient whose stops come
+  // from color.change(..., $blackness: ±40%). That emits out-of-range hsl()
+  // (upstream's own colours do it too - #e5123d yields 251% saturation), so
+  // browsers drop the whole declaration and the avatar has no background at
+  // all. Flat pastel fills instead, matching the badge convention: the
+  // crust text colour still comes from $intitials-avatars-colors-map.
+  span[role="img"].avatar {
+    @each $id, $color in (0: $ctp-red, 1: $ctp-peach, 2: $ctp-yellow,
+      3: $ctp-green, 4: $ctp-teal, 5: $ctp-blue, 6: $ctp-mauve, 7: $ctp-pink) {
+      &.avatar-color-#{$id} {
+        background: $color;
+      }
+    }
+  }
+
+  // Three casualties of the palette swap, all found by scanning the compiled
+  // CSS for out-of-gamut hsl() and for rules whose own foreground/background
+  // pair falls below 3:1.
+
+  // a) The private badge sets color: shade($brand-warning, 950)
+  //    (_badges.scss:28, _issue.scss:833). Upstream meant "almost black" -
+  //    the ink inversion made it almost white, giving 1.23:1 on peach.
+  span.private,
+  .badge-private {
+    color: $ctp-crust;
+  }
+
+  // b) Calendar issue cells use color.adjust($yellow, $lightness: 40%)
+  //    (_calendar.scss:168). Opale's #ffc107 sits at L~50% and had headroom;
+  //    Frappe yellow is already L~73%, so this overflowed to 113% lightness -
+  //    invalid CSS, so the cells lost their background entirely. Upstream's
+  //    pale-yellow wash does not translate: mixed against Frappe's blue-tinted
+  //    base it goes neutral grey below ~40% and garish above. These are cards
+  //    in a grid, so they get the raised-surface treatment used elsewhere,
+  //    reading against the cell's own $table-bg-accent and existing border.
+  ul.cal li.calbody div.issue {
+    background: $ctp-surface0;
+  }
+
+  // c) Search-result token 3 sets color.adjust(shade($blue, 800), $saturation:
+  //    25%) (_lists.scss:898), which overflowed to 112% saturation for the
+  //    same reason and dropped the colour. Its three siblings stay in gamut.
+  .highlight.token-3 {
+    color: $ctp-blue;
+  }
+
+  // Focus is signalled by the border alone. $input-border-focus-alpha is 0, so
+  // form-control-focus (src/opale/src/sass/mixins/_forms.scss:17-23) paints the
+  // border solid $accent on focus. That same mixin also sets a box-shadow - an
+  // inset recess plus a 2px outer accent ring - and both parts are wrong here:
+  // the recess is built from $black, which the ink inversion turned light (a
+  // pale smudge, not a recess), and the outer ring is the glow we are removing.
+  // Restate the shadow as just the plain resting recess (real black, the same
+  // value form-field uses at rest), so focus becomes a clean border-colour
+  // change with no glow and no shift in depth.
+  // The selector list mirrors the exact group that mixin is applied to in
+  // src/opale/src/sass/components/_forms.scss (lines 77-99) - every type
+  // upstream lists, no more - so each rule here is strictly more specific
+  // than its upstream counterpart (an added .theme-Catmine class) and wins
+  // on specificity alone, with no !important needed.
+  select:focus,
+  textarea:focus,
+  input[type="datetime"]:focus,
+  input[type="datetime-local"]:focus,
+  input[type="date"]:focus,
+  input[type="month"]:focus,
+  input[type="time"]:focus,
+  input[type="week"]:focus,
+  input[type="number"]:focus,
+  input[type="url"]:focus,
+  input[type="tel"]:focus,
+  input[type="color"]:focus,
+  input[type="search"]:focus,
+  input[type="email"]:focus,
+  input[type="text"]:focus,
+  input[type="password"]:focus {
+    box-shadow: inset 0 1px 2px rgb(0 0 0 / .075);
+  }
+
+  // Date, time, number and select inputs draw their affordances - the calendar
+  // picker indicator, the number spin buttons, the select dropdown arrow - as
+  // user-agent glyphs, not as anything Opale styles. With no color-scheme
+  // declared the browser paints those in its light-mode appearance: near-black
+  // icons that all but vanish against our dark $input-bg, the black-icons bug
+  // this answers. Declaring the controls dark makes the UA render the glyphs
+  // light, matching the $ctp-text alongside them.
+  // color-scheme sits on the controls themselves, not at :root: it does not
+  // inherit, so a root or body declaration would not reliably reach every
+  // control, and keeping it here holds the fix under the .theme-Catmine hook
+  // like everything else. Checkboxes and radios ride along and render as dark-
+  // appropriate, which suits the theme. (The magnifier on .js-search-input is a
+  // separate matter - a fixed dark PNG in _forms.scss:145, not a UA glyph, so
+  // color-scheme does not touch it.)
+  input,
+  select,
+  textarea {
+    color-scheme: dark;
+  }
+
+  // .splitcontent (the two-column layout on the account/profile page,
+  // memberships, and similar) carries overflow: auto (_elements.scss:123-127),
+  // which opens a block formatting context. Its content settles a sub-pixel or
+  // two taller than the box - 1363 vs 1361px on /users/current - so `auto`
+  // raises a scrollbar for a 2px overflow that is not real. These are plain flex
+  // column wrappers with no floats to contain, so drop the BFC: `visible` lets
+  // the container size to its content and the phantom scrollbar goes. Both axes
+  // have to be set - CSS promotes a lone `visible` back to `auto` when the other
+  // axis is a scrolling value.
+  .splitcontent {
+    overflow: visible;
+  }
+}
+
+@media print {
+  .theme-Catmine {
+    background: #fff;
+    color: #000;
+
+    #main,
+    #content {
+      background: #fff;
+    }
+
+    a {
+      color: #000 !important; // stylelint-disable-line declaration-no-important
+    }
+
+    // $panel-bg/$panel-color and $bubble-bg survive printing on components
+    // that are not hidden by opale's own @media print block
+    // (src/opale/src/sass/components/_print.scss): .box (attachments,
+    // watchers, relations panels) and .journal (issue history/journal
+    // entries). Both are dark theme colours that would otherwise print as
+    // dark boxes with light text on an otherwise white page.
+    .box {
+      background: #fff;
+      color: #000;
+    }
+
+    .journal,
+    .journal > div > h4,
+    .journal > h4,
+    .journal.changeset h4 + p,
+    .journal form {
+      background: #fff;
+      color: #000;
+    }
+
+    // The remaining $bubble-bg surfaces: "Associated revisions" on the issue
+    // page (_issue.scss:860-866, including its .wiki child, which uses
+    // $body-bg) and the forum topic bubble (_elements.scss:793-796). Found by
+    // grepping the submodule for $bubble-bg/$panel-bg consumers - do that
+    // again after any opale bump rather than trusting this list.
+    #issue-changesets div.changeset,
+    #issue-changesets div.changeset > .wiki,
+    &.controller-messages.action-show .message {
+      background: #fff;
+      color: #000;
+    }
+  }
+}

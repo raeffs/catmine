@@ -1,0 +1,12 @@
+// Layout metrics shared across the custom partials.
+
+// The column the page content sits in. A choice, not a derived value: opale's
+// own width ladder tops out at $width-lg (1160px, from $screen-lg 1200px) and
+// has no rung above it. #main is capped at this directly; #header keeps its
+// background edge to edge and insets its content to match.
+$content-max-width: 1280px;
+
+// The gutter either side of that column, or zero once the viewport is narrower
+// than it. Percentages in padding resolve against the containing block's width,
+// which for both #header and #main is #wrapper - so the two agree.
+$content-gutter: max(0px, calc((100% - #{$content-max-width}) / 2));

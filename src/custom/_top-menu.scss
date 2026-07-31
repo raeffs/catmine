@@ -1,0 +1,57 @@
+@use '../variables';
+
+// #top-menu - a taller, calmer strip.
+
+// The height is derived, not chosen. At font-size 1em the line box is exactly
+// $line-height-computed (20px), so $padding-large-vertical above and below
+// gives 40px - the same height as the #main-menu tab row, which upstream
+// builds from that identical pair. Opale has no 8px grid; its paddings are
+// 5/6/10/12/16/20px and 20px is its only genuine vertical rhythm unit. The
+// two 40px bars end up bracketing the 50px #header.
+$top-menu-height: variables.$line-height-computed + (variables.$padding-large-vertical * 2);
+
+.theme-Catmine {
+  #top-menu {
+    align-items: center;
+
+    // min-height rather than a fixed height, so the bar degrades to a taller
+    // strip rather than clipping if its content ever wraps. Below Redmine's
+    // 899px breakpoint the question is moot: #top-menu is not rendered at all
+    // there, and the responsive flyout styles its own account links through
+    // .js-profile-menu (opale components/_responsive.scss:205), which nothing
+    // in this file can reach.
+    min-height: $top-menu-height;
+
+    // Same hairline the .box panels carry (_elements.scss:97), so the strip
+    // reads as a surface edge rather than a colour change.
+    border-bottom: 1px solid variables.$panel-border;
+    font-size: 1em; // upstream: $font-size-small
+
+    li {
+      margin-right: 1em; // upstream: .8em
+    }
+
+    // Upstream sets these bold (components/_top.scss:44). At the base font
+    // size that is heavier than the strip needs.
+    a {
+      font-weight: variables.$font-weight-normal;
+    }
+
+    // Redmine 7 wraps the nav links in .general-menu and collapses the account
+    // into a .profile-menu avatar + dropdown - both real markup now, styled by
+    // opale components/_top.scss:96-125, not the dead selectors they were under
+    // Redmine 6. Opale absolutely-positions .profile-menu at top:1px
+    // (_top.scss:105-106), which align-items:center cannot reach, so the avatar
+    // rides high in our taller strip. Returning it to flex flow lets the strip
+    // centre it. Safe: the open dropdown panel anchors to #account
+    // (position:relative, from Redmine core), not to .profile-menu.
+    .profile-menu {
+      position: static;
+
+      // Drop opale's inline-baseline nudge (_gravatar.scss:45); it lifts the avatar off centre in this flex-centred strip.
+      img.gravatar {
+        top: 0;
+      }
+    }
+  }
+}

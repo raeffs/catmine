@@ -1,0 +1,28 @@
+@use '../variables';
+@use 'metrics' as *;
+
+// #header - the title band. Note the DOM: #main-menu is a *child* of #header
+// (after > h1), and #quick-search floats right out of the h1's line box. So
+// the "header" a reader sees is only the h1 row; the tab strip below it is a
+// sibling within the same element. The strip's own rules live in
+// custom/_main-menu.scss.
+
+.theme-Catmine {
+  #header {
+    // The band stays edge to edge - background and hairline both - but what it
+    // holds lines up with #main's column. #header is an auto-width block, so
+    // padding shrinks its content box instead of overflowing it, and every
+    // child follows at once: the h1, the tab strip, and #quick-search, which
+    // floats right against the padded edge rather than the window's. Each
+    // keeps its own $header-padding-horizontal inside that, which is the same
+    // 20px #content uses, so the title sits directly above the page text.
+    padding-right: $content-gutter;
+    padding-left: $content-gutter;
+
+    // The same hairline #top-menu carries, and the same one the .box panels
+    // use (_elements.scss:97), so the whole chrome closes on one edge
+    // treatment. No upstream variable for the header's own border -
+    // $header-bg/$header-text are the only header colour hooks opale exposes.
+    border-bottom: 1px solid variables.$panel-border;
+  }
+}
