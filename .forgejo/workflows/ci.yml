@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: docker
     container:
-      image: node:24-bookworm
+      image: node:26-bookworm
     steps:
       - uses: https://code.forgejo.org/actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
